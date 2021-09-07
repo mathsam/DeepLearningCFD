@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.1",
+    "justMyCode": false,
+    "configurations": [
+        {
+            "name": "train",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/trainer.py",
+            "console": "integratedTerminal",
+            "args": [
+            ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1",
+                "PYDEVD_UNBLOCK_THREADS_TIMEOUT": "3"
+            },
+            "justMyCode": false
+        }
+    ]
+}
