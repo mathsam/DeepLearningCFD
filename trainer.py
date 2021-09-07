@@ -6,10 +6,11 @@ from datasets import SRDataset
 from utils import *
 
 # Data parameters
-data_folder = '/home/juchai/azblob/yqg/exp1'  # folder with JSON data files
-scaling_factor = 4  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
+data_folder = './exp2'  # folder with JSON data files
+scaling_factor = 8  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
 
 # Model parameters
+num_layers = 16
 # large_kernel_size = 9  # kernel size of the first and last convolutions which transform the inputs and outputs
 # small_kernel_size = 3  # kernel size of all convolutions in-between, i.e. those in the residual and subpixel convolutional blocks
 # n_channels = 64  # number of channels in-between, i.e. the input and output channels for the residual and subpixel convolutional blocks
@@ -17,11 +18,11 @@ scaling_factor = 4  # the scaling factor for the generator; the input LR images 
 
 # Learning parameters
 checkpoint = None  # path to model checkpoint, None if none
-batch_size = 16  # batch size
+batch_size = 64  # batch size
 start_epoch = 0  # start at this epoch
-iterations = 1e6  # number of training iterations
-workers = 1  # number of workers for loading data in the DataLoader
-print_freq = 500  # print training status once every __ batches
+num_epochs = 100  # number of training epochs
+workers = 8  # number of workers for loading data in the DataLoader
+print_freq = 3  # print training status once every __ batches
 lr = 1e-4  # learning rate
 grad_clip = None  # clip if gradients are exploding
 
@@ -36,7 +37,7 @@ def main():
 
     # Initialize model or load checkpoint
     if checkpoint is None:
-        model = SuperResolutionNet(scaling_factor=scaling_factor)
+        model = SuperResolutionNet(scaling_factor=scaling_factor, num_layers=num_layers).cpu()
         # Initialize the optimizer
         optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=lr)
@@ -47,8 +48,13 @@ def main():
         model = checkpoint['model']
         optimizer = checkpoint['optimizer']
 
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
+        model = nn.DataParallel(model)
     # Move to default device
     model = model.to(device)
+
     criterion = nn.MSELoss().to(device)
 
     # Custom dataloaders
@@ -57,11 +63,9 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=workers,
                                                pin_memory=True)  # note that we're passing the collate function here
 
-    # Total number of epochs to train for
-    epochs = int(iterations // len(train_loader) + 1)
 
     # Epochs
-    for epoch in range(start_epoch, epochs):
+    for epoch in range(start_epoch, start_epoch + num_epochs):
         # One epoch's training
         train(train_loader=train_loader,
               model=model,
@@ -73,7 +77,7 @@ def main():
         torch.save({'epoch': epoch,
                     'model': model,
                     'optimizer': optimizer},
-                    'checkpoint_srnet.pth.tar')
+                    f'epoch_{epoch}_checkpoint_srnet.pth.tar')
 
 
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -135,6 +139,13 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(epoch, i, len(train_loader),
                                                                     batch_time=batch_time,
                                                                     data_time=data_time, loss=losses))
+    print('Epoch: [{0}][{1}/{2}]----'
+                  'Batch Time {batch_time.val:.3f} ({batch_time.avg:.3f})----'
+                  'Data Time {data_time.val:.3f} ({data_time.avg:.3f})----'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(epoch, i, len(train_loader),
+                                                                    batch_time=batch_time,
+                                                                    data_time=data_time, loss=losses))
+
     del lr_imgs, hr_imgs, sr_imgs  # free some memory since their histories may be stored
 
 
