@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/home/juchai/jaxcfd_venv/bin/python3"
+    "python.pythonPath": "/home/juchai/jaxcfd_venv/bin/python3",
+    "jupyter.jupyterServerType": "remote"
 }

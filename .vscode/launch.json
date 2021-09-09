@@ -18,6 +18,20 @@
                 "PYDEVD_UNBLOCK_THREADS_TIMEOUT": "3"
             },
             "justMyCode": false
+        },
+        {
+            "name": "train_gan",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/gan_trainer.py",
+            "console": "integratedTerminal",
+            "args": [
+            ],
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "1",
+                "PYDEVD_UNBLOCK_THREADS_TIMEOUT": "3"
+            },
+            "justMyCode": false
         }
     ]
 }

@@ -32,7 +32,10 @@ class SRDataset(Dataset):
         high_res = torch.tensor(normalized, dtype=torch.float32) # upper layer
         low_res = self.down_scaler(high_res)
 
-        return low_res, high_res
+        hres_h, hres_w = high_res.shape
+        lres_h, lres_w = low_res.shape
+
+        return low_res.reshape((1, lres_h, lres_w)), high_res.reshape((1, hres_h, hres_w))
 
     def __len__(self):
         """

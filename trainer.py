@@ -1,4 +1,5 @@
 import time
+import os
 import torch
 from torch import nn
 from ml_models import SuperResolutionNet
@@ -7,18 +8,20 @@ from utils import *
 
 # Data parameters
 data_folder = './exp2'  # folder with JSON data files
-scaling_factor = 8  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
+scaling_factor = 4  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
+save_dir = "../azblob/ssres_model"
+os.makedirs(save_dir, exist_ok=True)
 
 # Model parameters
 num_layers = 16
-# large_kernel_size = 9  # kernel size of the first and last convolutions which transform the inputs and outputs
-# small_kernel_size = 3  # kernel size of all convolutions in-between, i.e. those in the residual and subpixel convolutional blocks
+large_kernel_size = 15  # kernel size of the first and last convolutions which transform the inputs and outputs
+small_kernel_size = 5  # kernel size of all convolutions in-between, i.e. those in the residual and subpixel convolutional blocks
 # n_channels = 64  # number of channels in-between, i.e. the input and output channels for the residual and subpixel convolutional blocks
 # n_blocks = 16  # number of residual blocks
 
 # Learning parameters
 checkpoint = None  # path to model checkpoint, None if none
-batch_size = 64  # batch size
+batch_size = 48  # batch size
 start_epoch = 0  # start at this epoch
 num_epochs = 100  # number of training epochs
 workers = 8  # number of workers for loading data in the DataLoader
@@ -37,7 +40,8 @@ def main():
 
     # Initialize model or load checkpoint
     if checkpoint is None:
-        model = SuperResolutionNet(scaling_factor=scaling_factor, num_layers=num_layers).cpu()
+        model = SuperResolutionNet(large_kernel_size=large_kernel_size, small_kernel_size=small_kernel_size,
+                                   scaling_factor=scaling_factor, num_layers=num_layers).cpu()
         # Initialize the optimizer
         optimizer = torch.optim.Adam(params=filter(lambda p: p.requires_grad, model.parameters()),
                                      lr=lr)
@@ -50,7 +54,6 @@ def main():
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
-        # dim = 0 [30, xxx] -> [10, ...], [10, ...], [10, ...] on 3 GPUs
         model = nn.DataParallel(model)
     # Move to default device
     model = model.to(device)
@@ -74,10 +77,17 @@ def main():
               epoch=epoch)
 
         # Save checkpoint
-        torch.save({'epoch': epoch,
-                    'model': model,
-                    'optimizer': optimizer},
-                    f'epoch_{epoch}_checkpoint_srnet.pth.tar')
+        save_path = os.path.join(save_dir, f'epoch_{epoch}_checkpoint_srnet.pth.tar')
+        if isinstance(model, torch.nn.parallel.DataParallel):
+            torch.save({'epoch': epoch,
+                       'model': model.module,
+                       'optimizer': optimizer},
+                       save_path)
+        else:
+            torch.save({'epoch': epoch,
+                       'model': model,
+                       'optimizer': optimizer},
+                       save_path)
 
 
 def train(train_loader, model, criterion, optimizer, epoch):
