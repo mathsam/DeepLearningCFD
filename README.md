@@ -29,11 +29,15 @@ At epoch 100
 ![2d field](results/Sep8/epoch100_gan_super_res_field2d_compare.png)
 ![spectrum](results/Sep8/epoch100_gan_super_res_vorticity_spec_compare.png)
 
-At epoch 200, now GAN super-resolution model output looks quite realstic. The fine structure is very close to the high resolution image. I was expecting the super-resolution model to generate some realistic fine structure, but not in the exact same location as the actual high resolution image as this information could be lost in the low resolution image. But at 4x scaling factor, it could be the case that this information is still preserved. GAN helps the model to focus on learning small scale structure. This can also been seen from 
+At epoch 200, now GAN super-resolution model output starts to look realstic. The fine structure is very close to the high resolution image. I was expecting the super-resolution model to generate some realistic fine structure, but not in the exact same location as the actual high resolution image as this information could be lost in the low resolution image. But at 4x scaling factor, it could be the case that most information is still preserved. GAN helps the model to focus on learning small scale structure. This can also been seen from 
 ![2d field](results/Sep8/epoch200_gan_super_res_field2d_compare.png)
 ![spectrum](results/Sep8/epoch200_gan_super_res_vorticity_spec_compare.png)
 
+At epoch 400, the GAN super-resolution output is quite realistic. It also generates some details not existing in the original high resolution image. The vorticity spectrum is very close to original high resolution image's spectrum, except at the highest wavenumber.
+![2d field](results/Sep8/epoch400_gan_super_res_field2d_compare.png)
+![spectrum](results/Sep8/epoch400_gan_super_res_vorticity_spec_compare.png)
 
-Learning curve. Content loss keeps decreasing, which means GAN helps generator to generate super-resolution image exactly the same as original high-resolution image. Adversarial/Disriminator loss fluctuates.
+
+Learning curve. Content loss keeps decreasing, which means GAN helps generator to generate super-resolution image exactly the same as original high-resolution image. Adversarial loss decreases first, but then increases with some fluctuation.
 
 ![learning curve](results/Sep8/learning_curve.png)
