@@ -41,3 +41,30 @@ At epoch 400, the GAN super-resolution output is quite realistic. It also genera
 Learning curve. Content loss keeps decreasing, which means GAN helps generator to generate super-resolution image exactly the same as original high-resolution image. Adversarial loss decreases first, but then increases with some fluctuation.
 
 ![learning curve](results/Sep8/learning_curve.png)
+
+### Exp2: increase scaling factor
+
+Increase scaling factor to 8x. Other settings are kept the same.
+
+First train without GAN for 200 epochs. At the end of training, the super-resolution output looks still close to interpolation result.
+
+![2d field](results/Sep10/epoch199_sres_field2d.png)
+![spectrum](results/Sep10/epoch199_sres_spectrum.png)
+![learning curve](results/Sep10/sres_learning_curve.png)
+
+Then continue train with GAN. Similar to previous experiment, small scale structure quickly emerge, though it doesn't look realistic. 
+
+At epoch 23:
+![2d field](results/Sep10/epoch23_gan_field2d.png)
+![spectrum](results/Sep10/epoch23_gan_spectrum.png)
+
+At epoch 240, the model output becomes much more realistic, and the vorticity spectrum has shape close to the actual one.
+![2d field](results/Sep10/epoch240_gan_field2d.png)
+![spectrum](results/Sep10/epoch240_gan_spectrum.png)
+
+However, model training is unstable. At epoch 250, the model output becomes quite bad.
+![2d field](results/Sep10/epoch250_gan_field2d.png)
+![spectrum](results/Sep10/epoch250_gan_spectrum.png)
+
+The sudden collapse during model training can be clearly seen from the learning curve. Between epoch 240 and 250, there's a sudden increase of adversarial loss (first peak), at the same time, the discriminator loss goes to zero. There are two more such sudden collapses during training. It seems that the discriminator becomes too strong, and probably identifies some local feature.
+![learning curve](results/Sep10/gan_learning_curve.png)
