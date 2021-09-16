@@ -5,11 +5,15 @@ from torch import nn
 from ml_models import SuperResolutionNet
 from datasets import SRDataset
 from utils import *
+from torch.utils.tensorboard import SummaryWriter
+
 
 # Data parameters
+exp_name = "GAN_Sep10_exp2"
+summary_writer = SummaryWriter(log_dir=exp_name)
 data_folder = './exp2'  # folder with JSON data files
-scaling_factor = 4  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
-save_dir = "../azblob/ssres_model"
+scaling_factor = 8  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
+save_dir = os.path.join("../azblob/ssres_model", exp_name)
 os.makedirs(save_dir, exist_ok=True)
 
 # Model parameters
@@ -20,7 +24,7 @@ small_kernel_size = 5  # kernel size of all convolutions in-between, i.e. those 
 # n_blocks = 16  # number of residual blocks
 
 # Learning parameters
-checkpoint = None  # path to model checkpoint, None if none
+checkpoint = "/home/juchai/azblob/sres_model/GAN_Sep10_exp1/epoch_240_checkpoint_srnet.pth.tar"  # path to model checkpoint, None if none
 batch_size = 48  # batch size
 start_epoch = 0  # start at this epoch
 num_epochs = 100  # number of training epochs
@@ -140,6 +144,9 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # Reset start time
         start = time.time()
+
+        global_step = i + epoch * len(train_loader)
+        summary_writer.add_scalar(os.path.join(exp_name, "loss"), losses.val, global_step)
 
         # Print status
         if i % print_freq == 0:

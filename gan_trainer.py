@@ -6,20 +6,20 @@ from ml_models import Generator, Discriminator
 from datasets import SRDataset
 from utils import *
 
-exp_name = "GAN_Sep8_exp1"
+exp_name = "GAN_Sep14_exp1"
 from torch.utils.tensorboard import SummaryWriter
 summary_writer = SummaryWriter(log_dir=exp_name)
 
 
 # Data parameters
 data_folder = './exp2'  # folder with JSON data files
-scaling_factor = 4  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
-save_dir = "../azblob/gan_model"
+scaling_factor = 8  # the scaling factor for the generator; the input LR images will be downsampled from the target HR images by this factor
+save_dir = os.path.join("../azblob/gan_model", exp_name)
 os.makedirs(save_dir, exist_ok=True)
 
 # Generator parameters
 num_layers_g = 16  # number of residual blocks
-srresnet_checkpoint = "/home/juchai/azblob/sres_model/epoch_30_checkpoint_srnet.pth.tar"
+srresnet_checkpoint = "/home/juchai/azblob/sres_model/GAN_Sep10_exp1/epoch_199_checkpoint_srnet.pth.tar"
 large_kernel_size_g = 15  # kernel size of the first and last convolutions which transform the inputs and outputs
 small_kernel_size_g = 5  # kernel size of all convolutions in-between, i.e. those in the residual and subpixel convolutional blocks
 
@@ -29,8 +29,10 @@ n_channels_d = 64  # number of output channels in the first convolutional block,
 n_blocks_d = 8  # number of convolutional blocks
 fc_size_d = 1024  # size of the first fully connected layer
 
+backprop_interval_d = 2 # only do backprop every k steps
+
 # Learning parameters
-checkpoint = "/home/juchai/azblob/an_model/epoch100_checkpoint_srgan.pth.tar"
+checkpoint = "/home/juchai/azblob/an_model/GAN_Sep14_exp1/epoch321_checkpoint_srgan.pth.tar"
 batch_size = 24  # batch size
 start_epoch = 0  # start at this epoch
 iterations = 2e5  # number of training iterations
@@ -220,12 +222,13 @@ def train(train_loader, generator, discriminator, content_loss_criterion, advers
                            adversarial_loss_criterion(hr_discriminated, torch.ones_like(hr_discriminated))
 
         # Back-prop.
-        optimizer_d.zero_grad()
-        adversarial_loss.backward()
+        if i % backprop_interval_d == 0:
+            optimizer_d.zero_grad()
+            adversarial_loss.backward()
 
 
-        # Update discriminator
-        optimizer_d.step()
+            # Update discriminator
+            optimizer_d.step()
 
         # Keep track of loss
         losses_d.update(adversarial_loss.item(), hr_imgs.size(0))
