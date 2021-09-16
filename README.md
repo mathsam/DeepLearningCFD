@@ -68,3 +68,12 @@ However, model training is unstable. At epoch 250, the model output becomes quit
 
 The sudden collapse during model training can be clearly seen from the learning curve. Between epoch 240 and 250, there's a sudden increase of adversarial loss (first peak), at the same time, the discriminator loss goes to zero. There are two more such sudden collapses during training. It seems that the discriminator becomes too strong, and probably identifies some local feature.
 ![learning curve](results/Sep10/gan_learning_curve.png)
+
+### Exp2b: reducing discriminator training
+
+In previous experiment, discriminator gets too strong. In this one, continue training from epoch 240 from previous experiment, at which time the collapse doesn't happen yet. This time, only train discriminator at half of the time.
+
+At epoch 470, the model output looks quite realistic, though some small disturbances are absent from the original image but these are expected and desired. From learning curve, we can also see that the collapose doesn't happen.
+![2d field](results/Sep15/epoch470_field2d.png)
+![spectrum](results/Sep15/epoch470_spec.png)
+![learning curve](results/Sep15/learning_curve.png)
